@@ -3,7 +3,7 @@
 $(dirname $0)/build.sh
 
 # build
-source $(dirname $0)/../.env
+source $(dirname $0)/../.env.push
 
 # tag
 sudo docker tag muskit/qrt-unnest-api $DKR_URI

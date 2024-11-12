@@ -1,3 +1,4 @@
 #!/bin/sh
 
-docker run -p 3000:3000 --rm --init -i muskit/qrt-unnest-api
+cd $(dirname $0)/..
+BROWSER_PATH=/usr/bin/chromium node src/express.js

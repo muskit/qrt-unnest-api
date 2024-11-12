@@ -35,12 +35,10 @@ ENV NPM_CONFIG_CACHE=/tmp/.npm
 
 EXPOSE 8080
 
+COPY .env.prod ./
 COPY bootstrap ./
 COPY src ./src
 
+ENV BROWSER_PATH=/usr/bin/google-chrome-stable
 ENTRYPOINT ["./bootstrap"]
 CMD ["lambda.handler"]
-
-### NORMAL RUNNING ###
-# EXPOSE 3000
-# CMD [ "node", "src/index.express.js" ]

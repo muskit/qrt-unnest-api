@@ -1,4 +1,5 @@
 import puppeteer from "puppeteer-core";
+import { isProduction } from "./utils.js";
 
 const MINIMAL_ARGS = [
     '--autoplay-policy=user-gesture-required',
@@ -42,11 +43,11 @@ const MINIMAL_ARGS = [
 export function createBrowser() {
     return puppeteer.launch({
         // executablePath: "/usr/bin/chromium",
-        executablePath: "/usr/bin/google-chrome-stable",
+        executablePath: process.env.BROWSER_PATH,
         args: MINIMAL_ARGS,
         defaultViewport: { width: 1366, height: 768 },
         ignoreHTTPSErrors: true,
-        headless: true,
+        headless: isProduction(),
         timeout: 45_000,
         dumpio: true,
     })

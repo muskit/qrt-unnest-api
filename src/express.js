@@ -4,7 +4,7 @@ import { requestStream } from "./tweet_unnest.js";
 
 const app = express();
 
-app.get("/", async (req, res, next) => {
+app.post("/", async (req, res, next) => {
     // check for param "url"
     const url = req.query.url
     if (!url) {

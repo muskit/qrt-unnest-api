@@ -5,6 +5,10 @@
 
 import { requestStream } from "./tweet_unnest.js";
 
+// HACK: force flush of data chunk
+// https://betterdev.blog/lambda-response-streaming-flush-content/
+const padding = " ".repeat(100_000); // generate 100 KB string
+
 export const handler = awslambda.streamifyResponse(async (event, responseStream) => {
     console.log(`event: ${JSON.stringify(event)}`)
 
@@ -21,7 +25,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream)
     }
 
     for await (const chunk of requestStream(url)) {
-        responseStream.write(chunk)
+        responseStream.write(chunk + "\n")
     }
     responseStream.end()
 })

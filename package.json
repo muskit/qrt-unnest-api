@@ -12,7 +12,11 @@
   "description": "",
   "dependencies": {
     "aws-lambda-ric": "^3.2.1",
+    "dotenv": "^16.4.5",
     "puppeteer-core": "^23.7.1",
     "twitter-widgets": "^2.0.0"
+  },
+  "devDependencies": {
+    "express": "^4.21.1"
   }
 }

@@ -1,7 +1,10 @@
 import { Browser } from "puppeteer-core"
 
-import { getTweetId, removeURLParams, urlValid } from "./utils.js"
+import { getTweetId, isProduction, removeURLParams, urlValid } from "./utils.js"
 import { createBrowser } from "./browser.js"
+import { config as dotenvLoad } from "dotenv"
+
+dotenvLoad({ path: '.env.prod' })
 
 /**
  * Return HTML of tweet with quoted tweet hidden, and url of quoted tweet
@@ -9,8 +12,17 @@ import { createBrowser } from "./browser.js"
  * @param {Browser} browser 
  * @returns { { html: string, next_qrt: string } }
  */
-async function createCleanEmbed(html, browser) {
+async function cleanEmbed(html, browser) {
     const page = await browser.newPage()
+    // await page.setCookie(
+    //     {
+    //         domain: "x.com",
+    //         name: "auth_token",
+    //         value: process.env.X_AUTH_TOKEN,
+    //         path: '/',
+    //         expires: Date.now() + 1000 * 60 * 60 * 24 * 7, // 1 week
+    //     }
+    // )
     await page.setContent(html, {
         waitUntil: "networkidle0"
     })
@@ -25,7 +37,7 @@ async function createCleanEmbed(html, browser) {
     }
 
     // work inside iframe
-    let nextQRT = await iframe.evaluate(() => {
+    let nextQRT = await iframe.evaluate((is_production) => {
         let result = document.getElementsByTagName("article")
         let nextQRT
 
@@ -40,16 +52,18 @@ async function createCleanEmbed(html, browser) {
             if (nextQRT == null) {
                 console.log(`nextQRT wasn\'t found; leaving page intact`)
             } else {
-
-                // remove quoted tweet from view
-                qrtElem.parentElement.remove()
+                console.log("nextQRT found; removing element...")
+                if (is_production)
+                    // remove quoted tweet from view
+                    qrtElem.parentElement.remove()
             }
         }
         return nextQRT
-    })
+    }, isProduction())
 
     const qrtHTML = await iframe.content()
-    await page.close()
+    if (isProduction())
+        await page.close()
 
     const res = { html: qrtHTML, next_qrt: nextQRT }
     return res
@@ -62,9 +76,16 @@ async function createCleanEmbed(html, browser) {
  * @param {Browser} browser 
  * @returns {{status: string, body: any}}
  */
-async function cleanEmbedAndUnnest(url, browser) {
+async function getEmbedAndUnnest(url, browser) {
     // get oEmbed for curTweetURL
-    const response = await fetch(`https://publish.twitter.com/oembed?url=${url}&dnt=true&hide_thread=true`)
+    const response = await fetch(
+        `https://publish.twitter.com/oembed?url=${url}&dnt=true&hide_thread=true`,
+        {
+            headers: {
+                cookie: `auth_token=${process.env.X_AUTH_TOKEN}`
+            }
+        }
+    )
     if (!response.ok) {
         return { status: "error", body: `From Twitter: ${response.status} ${response.statusText}` }
     }
@@ -78,7 +99,7 @@ async function cleanEmbedAndUnnest(url, browser) {
     }
 
     // modify embed
-    const data = await createCleanEmbed(json.html, browser)
+    const data = await cleanEmbed(json.html, browser)
     data.id = getTweetId(url)
     return {
         status: "success",
@@ -92,19 +113,19 @@ export async function* tweetUnnestIterator(url) {
 
     // TODO: mongo caching
 
-    console.log("launching browser...")
-    // ...
     const browser = await createBrowser()
     console.log("browser launched!")
     try {
         while (curURL != null) {
-            const data = await cleanEmbedAndUnnest(curURL, browser)
+            console.log(`unnesting ${curURL}...`)
+            const data = await getEmbedAndUnnest(curURL, browser)
             if (data.status == "success") {
                 yield data
 
                 // recursion prevention
                 // TODO: TEST
                 if (visited.has(data.body.id)) {
+                    console.log("ran into repeated post!")
                     yield {
                         status: "error",
                         body: "unnested a post that we've already unnested!"
@@ -115,12 +136,14 @@ export async function* tweetUnnestIterator(url) {
                 curURL = data.body.next_qrt
             }
             else {
+                console.log(`data error!\n${data}`)
                 // error -- stop
                 yield data
                 break
             }
         }
     } catch (err) {
+        console.log(`unknown error while unnesting!!!\n${err}`)
         yield {
             "status": "error",
             "body": `While unnesting: ${err}`
@@ -129,19 +152,27 @@ export async function* tweetUnnestIterator(url) {
         return
     }
 
-    await browser.close()
+    console.log("finished unnesting")
+    if (isProduction())
+        await browser.close()
 }
 
 // Main data stream. Even handles errors (+ in the URL).
 export async function* requestStream(url) {
+    if (isProduction()) {
+        console.log("Running in production mode!")
+    } else {
+        console.log("Running in dev mode!")
+    }
+
     if (url == null) {
-        yield { "status": "error", "body": "Missing parameter" }
+        yield JSON.stringify({ "status": "error", "body": "Missing parameter" })
         return
     }
 
     const err = urlValid(url)
     if (err != null) {
-        yield { "status": "error", "body": err }
+        yield JSON.stringify({ "status": "error", "body": err })
         return
     }
 
@@ -152,6 +183,6 @@ export async function* requestStream(url) {
 
     const tweetIterator = tweetUnnestIterator(url)
     for await (const data of tweetIterator) {
-        yield data
+        yield JSON.stringify(data)
     }
 }
