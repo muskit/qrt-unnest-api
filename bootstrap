@@ -1,4 +1,15 @@
-#!/bin/sh
+#!/bin/bash
+
+source $(dirname 0)/.env.prod
+# $(dirname 0)/.env.prod
+
+# tailscale setup
+mkdir -p /tmp/tailscale
+tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
+tailscale up --auth-key=${TAILSCALE_AUTHKEY} --hostname=qrt-unnest-api
+echo Tailscale started
+
+# start api
 cd $(dirname $0)/src
 if [ -z "${AWS_LAMBDA_RUNTIME_API}" ]; then
     exec /usr/local/bin/aws-lambda-rie /usr/local/bin/npx aws-lambda-ric $1

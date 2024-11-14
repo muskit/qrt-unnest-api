@@ -4,6 +4,10 @@ ARG FUNCTION_DIR=/app
 WORKDIR ${FUNCTION_DIR}
 ENV NODE_ENV=production
 
+# add tailscale repo
+RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/buster.gpg | apt-key add -
+RUN curl -fsSL https://pkgs.tailscale.com/stable/debian/buster.list | tee /etc/apt/sources.list.d/tailscale.list
+
 # ensure packages are up to date
 RUN apt-get update && apt-get upgrade -y
 
@@ -22,8 +26,14 @@ RUN apt-get install -y wget gnupg \
     && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
     && apt-get update \
     && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
-        --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+        --no-install-recommends
+
+# tailscale
+RUN apt-get install -y tailscale
+
+# clean apt caches
+RUN rm -rf /var/lib/apt/lists/*
+RUN rm -rf /var/cache/apt/archives/*
 
 COPY package*.json ./
 RUN npm ci
