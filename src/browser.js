@@ -40,8 +40,9 @@ const MINIMAL_ARGS = [
     '--allow-insecure-localhost',
 ];
 
-export function createBrowser() {
-    return puppeteer.launch({
+export async function createBrowser() {
+    const startTime = performance.now()
+    const browser = await puppeteer.launch({
         // executablePath: "/usr/bin/chromium",
         executablePath: process.env.BROWSER_PATH,
         args: MINIMAL_ARGS,
@@ -51,4 +52,6 @@ export function createBrowser() {
         timeout: 61_000,
         dumpio: true,
     })
+    console.log(`browser launched after ${(performance.now() - startTime) / 1000} seconds`)
+    return browser
 }

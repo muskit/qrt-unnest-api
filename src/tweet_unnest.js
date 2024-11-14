@@ -114,7 +114,7 @@ export async function* tweetUnnestIterator(url) {
     // TODO: mongo caching
 
     const browser = await createBrowser()
-    console.log("browser launched!")
+
     try {
         while (curURL != null) {
             console.log(`unnesting ${curURL}...`)
