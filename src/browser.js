@@ -48,7 +48,7 @@ export function createBrowser() {
         defaultViewport: { width: 1366, height: 768 },
         ignoreHTTPSErrors: true,
         headless: isProduction(),
-        timeout: 45_000,
+        timeout: 61_000,
         dumpio: true,
     })
 }

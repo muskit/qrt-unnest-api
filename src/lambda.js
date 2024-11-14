@@ -3,14 +3,14 @@
  */
 "use strict";
 
-import { requestStream } from "./tweet_unnest.js";
+import { requestStream } from "./stream.js";
 
 // HACK: force flush of data chunk
 // https://betterdev.blog/lambda-response-streaming-flush-content/
 const padding = " ".repeat(100_000); // generate 100 KB string
 
 export const handler = awslambda.streamifyResponse(async (event, responseStream) => {
-    console.log(`event: ${JSON.stringify(event)}`)
+    // console.log(`event: ${JSON.stringify(event)}`)
 
     responseStream.setContentType("text/plain")
 
