@@ -12,4 +12,4 @@ The backend API half of a web tool for unnesting quote tweets.
 
 To unnest, it currently uses [Twitter Widgets](https://www.npmjs.com/package/twitter-widgets) to create embeds for viewing on the frontend. It then uses [Puppeteer](https://www.npmjs.com/package/puppeteer-core) to retrieve the nested quote tweets and clean up embeds to be viewed on the frontend.
 
-There are also [scripts](scripts) used for quickly building and pushing to the AWS ECR specified in the [.env](.env.example).
+There are also [scripts](scripts) used for quickly building and pushing to the AWS ECR repo specified in the [.env](.env.example).
