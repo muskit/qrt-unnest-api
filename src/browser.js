@@ -49,7 +49,7 @@ export async function createBrowser() {
         defaultViewport: { width: 1366, height: 768 },
         ignoreHTTPSErrors: true,
         headless: isProduction(),
-        timeout: 61_000,
+        timeout: 100_000,
         dumpio: true,
     })
     console.log(`browser launched after ${(performance.now() - startTime) / 1000} seconds`)
