@@ -1,6 +1,6 @@
 import { Browser } from "puppeteer-core"
 
-import { getTweetId, isProduction, removeURLParams, urlValid } from "./utils.js"
+import { getTweetId, isProduction, } from "./utils.js"
 import { createBrowser } from "./browser.js"
 import { config as dotenvLoad } from "dotenv"
 
